@@ -2,6 +2,6 @@
 {
     public interface IFileService
     {
-        Task<List<string>> UploadFilesAsync(List<IFormFile> files);
+        Task<string> UploadFilesAsync(IFormFile file, IWebHostEnvironment env);
     }
 }

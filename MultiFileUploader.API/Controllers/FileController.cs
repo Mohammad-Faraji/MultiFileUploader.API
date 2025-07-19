@@ -35,5 +35,23 @@ namespace MultiFileUploader.API.Controllers
             return File(fileStream, "application/octet-stream", fileName);
         }
 
+        [HttpDelete("delete/{fileName}")]
+        public async Task<IActionResult> Delete(string fileName)
+        {
+            var result = await _fileService.DeleteFileAsync(fileName);
+            if (!result)
+                return NotFound("File not found");
+
+            return Ok("File deleted");
+        }
+
+
+
+        [HttpGet("list")]
+        public IActionResult ListFiles()
+        {
+            var files = _fileService.ListAllFiles();
+            return Ok(files);
+        }
     }
 }

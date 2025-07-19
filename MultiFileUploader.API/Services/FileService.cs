@@ -1,4 +1,6 @@
 ﻿
+using Microsoft.AspNetCore.Mvc;
+
 namespace MultiFileUploader.API.Services
 {
     public class FileService : IFileService
@@ -34,6 +36,11 @@ namespace MultiFileUploader.API.Services
             return new FileStream(filePath, FileMode.Open,FileAccess.Read);
         }
 
+        public List<string> ListAllFiles()
+        {
+            return Directory.GetFiles(_uploadPath).Select(Path.GetFileName).ToList();
+        }
+
         public async Task<List<string>> UploadFilesAsync(List<IFormFile> files)
         {
             var savedFiles = new List<string>();
@@ -55,5 +62,6 @@ namespace MultiFileUploader.API.Services
 
             return savedFiles;
         }
+
     }
 }

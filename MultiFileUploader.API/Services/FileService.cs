@@ -3,31 +3,57 @@ namespace MultiFileUploader.API.Services
 {
     public class FileService : IFileService
     {
-             
-        public async Task<string> UploadFilesAsync(IFormFile file, IWebHostEnvironment env)
+
+        private readonly string _uploadPath;
+
+        public FileService(IWebHostEnvironment env)
         {
-            if (file == null || file.Length == 0)
+            _uploadPath = Path.Combine(env.WebRootPath, "uploads");
+            if (!Directory.Exists(_uploadPath))
+                Directory.CreateDirectory(_uploadPath);
+        }
+
+        public async Task<bool> DeleteFileAsync(string fileName)
+        {
+            var filePath = Path.Combine(_uploadPath, fileName);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<FileStream?> GetFileAsync(string fileName)
+        {
+            var filePath = Path.Combine(_uploadPath, fileName);
+
+            if (!File.Exists(filePath))
                 return null;
 
-            // آدرس کامل محل آپلود را همین‌جا مشخص می‌کنیم
-            string uploadPath = Path.Combine(env.WebRootPath, "uploads");
+            return new FileStream(filePath, FileMode.Open,FileAccess.Read);
+        }
 
-            if (!Directory.Exists(uploadPath)) 
+        public async Task<List<string>> UploadFilesAsync(List<IFormFile> files)
+        {
+            var savedFiles = new List<string>();
+
+            foreach (var file in files)
             {
-                Directory.CreateDirectory(uploadPath);
+                if (file.Length > 0)
+                {
+                    var filePath = Path.Combine(_uploadPath, file.FileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    savedFiles.Add(file.FileName);
+                }
             }
 
-            // ایجاد نام یکتا برای فایل
-            string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            string filePath = Path.Combine(uploadPath, uniqueFileName);
-
-            // ذخیره فایل در مسیر مشخص‌شده
-            using (var steram = new FileStream(filePath, FileMode.Create)) 
-            {
-                await file.CopyToAsync(steram);
-            }
-
-            return uniqueFileName;
+            return savedFiles;
         }
     }
 }
